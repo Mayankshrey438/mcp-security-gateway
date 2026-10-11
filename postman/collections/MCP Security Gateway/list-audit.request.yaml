@@ -1,0 +1,22 @@
+$kind: http-request
+method: GET
+url: '{{base_url}}/v1/audit?limit=25'
+order: 4000
+headers:
+  - key: Authorization
+    value: 'Bearer {{admin_token}}'
+  - key: X-Agent-ID
+    value: contract-admin
+  - key: X-Agent-Scopes
+    value: 'gateway:admin'
+queryParams:
+  - key: limit
+    value: "25"
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test("audit response is an array", function () {
+        pm.response.to.have.status(200);
+        pm.expect(pm.response.json()).to.be.an("array");
+      });

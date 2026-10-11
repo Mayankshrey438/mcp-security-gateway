@@ -1,0 +1,10 @@
+$kind: collection
+name: MCP Security Gateway
+description: Contract checks for gateway health, approvals, and audit records.
+variables:
+  - key: base_url
+    value: http://127.0.0.1:8080
+  - key: admin_token
+    value: replace-with-admin-jwt
+  - key: approval_id
+    value: 00000000-0000-0000-0000-000000000000

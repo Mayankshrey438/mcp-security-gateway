@@ -1,0 +1,21 @@
+$kind: http-request
+method: GET
+url: '{{base_url}}/v1/approvals/:approval_id'
+order: 2000
+headers:
+  - key: Authorization
+    value: 'Bearer {{admin_token}}'
+  - key: X-Agent-ID
+    value: contract-admin
+  - key: X-Agent-Scopes
+    value: 'gateway:admin'
+pathVariables:
+  - key: approval_id
+    value: '{{approval_id}}'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test("approval lookup has a defined outcome", function () {
+        pm.expect([200, 404]).to.include(pm.response.code);
+      });

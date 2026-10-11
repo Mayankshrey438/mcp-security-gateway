@@ -1,0 +1,67 @@
+services:
+  gateway:
+    build: .
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      MCP_GATEWAY_HOST: 0.0.0.0
+      MCP_GATEWAY_POLICY_PATH: policies/default.yaml
+      MCP_GATEWAY_DATABASE_URL: postgresql+asyncpg://gateway:gateway@postgres:5432/gateway
+      MCP_GATEWAY_REDIS_URL: redis://redis:6379/0
+      MCP_GATEWAY_DEV_IDENTITY: "true"
+      MCP_GATEWAY_ALLOW_TOOL_ENROLLMENT: "true"
+      MCP_GATEWAY_ALLOWED_ORIGINS: '["http://127.0.0.1","http://localhost"]'
+      MCP_GATEWAY_UPSTREAMS: >-
+        [{"id":"filesystem","url":"http://demo-filesystem:9001/mcp"},
+        {"id":"email","url":"http://demo-email:9002/mcp"}]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      demo-filesystem:
+        condition: service_started
+      demo-email:
+        condition: service_started
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: gateway
+      POSTGRES_PASSWORD: gateway
+      POSTGRES_DB: gateway
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gateway"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - gateway-postgres:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+  demo-filesystem:
+    build: .
+    command: ["uvicorn", "deploy.demo_server:app", "--host", "0.0.0.0", "--port", "9001"]
+    environment:
+      DEMO_SERVER_ROLE: filesystem
+    volumes:
+      - ./deploy:/app/deploy:ro
+
+  demo-email:
+    build: .
+    command: ["uvicorn", "deploy.demo_server:app", "--host", "0.0.0.0", "--port", "9002"]
+    environment:
+      DEMO_SERVER_ROLE: email
+    volumes:
+      - ./deploy:/app/deploy:ro
+
+volumes:
+  gateway-postgres:

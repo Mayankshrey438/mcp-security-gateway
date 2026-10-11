@@ -1,0 +1,41 @@
+version: "2026-10-11.1"
+default: deny
+rules:
+  - id: research-read-docs
+    principals: [research-agent]
+    servers: [filesystem]
+    methods: [tools/call]
+    tools: [read_file]
+    constraints:
+      - field: path
+        operator: path_under
+        value: /docs
+    effect: allow
+    rate_limit: 60
+    rate_window_seconds: 60
+
+  - id: support-email-approval
+    principals: [support-agent]
+    servers: [email]
+    methods: [tools/call]
+    tools: [send_email]
+    constraints:
+      - field: to
+        operator: regex
+        value: '^[^@\s]+@example\.com$'
+      - field: body
+        operator: max_length
+        value: 10000
+    effect: require_approval
+    rate_limit: 10
+    rate_window_seconds: 60
+    redact_fields: [body]
+
+  - id: protocol-bootstrap
+    principals: ["*"]
+    servers: ["*"]
+    methods: [initialize, notifications/initialized, ping]
+    tools: ["*"]
+    effect: allow
+    rate_limit: 120
+    rate_window_seconds: 60

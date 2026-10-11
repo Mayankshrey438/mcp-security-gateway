@@ -1,0 +1,12 @@
+$kind: http-request
+method: GET
+url: '{{base_url}}/health/ready'
+order: 1000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test("gateway is ready", function () {
+        pm.response.to.have.status(200);
+        pm.expect(pm.response.json().status).to.eql("ok");
+      });

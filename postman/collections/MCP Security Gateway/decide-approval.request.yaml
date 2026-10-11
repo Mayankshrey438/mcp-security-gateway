@@ -1,0 +1,30 @@
+$kind: http-request
+method: POST
+url: '{{base_url}}/v1/approvals/:approval_id/decision'
+order: 3000
+headers:
+  - key: Authorization
+    value: 'Bearer {{admin_token}}'
+  - key: X-Agent-ID
+    value: contract-admin
+  - key: X-Agent-Scopes
+    value: 'gateway:admin'
+  - key: Content-Type
+    value: application/json
+pathVariables:
+  - key: approval_id
+    value: '{{approval_id}}'
+body:
+  type: json
+  content: |-
+    {
+      "decision": "approved",
+      "reason": "Reviewed in the Postman contract suite"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test("decision is accepted or safely rejected", function () {
+        pm.expect([200, 404, 409]).to.include(pm.response.code);
+      });
